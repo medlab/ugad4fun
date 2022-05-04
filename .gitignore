@@ -30,3 +30,10 @@
 *.exe
 *.out
 *.app
+
+# Jetbrains IDE projects
+**/.idea/**
+
+# CMake build files
+**/cmake-build-*/**
+
