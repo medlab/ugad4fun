@@ -78,7 +78,7 @@
 
         <gadget>
             <name>ImagePassthrough</name>
-            <dll>g4f_passthroughgadget</dll>
+            <dll>g4f_imagepassthroughgadget</dll>
             <classname>ImagePassthroughGadget</classname>
         </gadget>
 

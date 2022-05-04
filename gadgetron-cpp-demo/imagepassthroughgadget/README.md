@@ -5,7 +5,7 @@ Test out of gadgetron gadget development
 
 # Quick Start
 
-## build it
+## Build it
 ```bash
 # active conda gadgetron environment
 
@@ -16,14 +16,14 @@ cmake --build . --target install
 
 ```
 
-## run gadgetron (in conda)
+## Run gadgetron (in conda)
 ```bash
 gadgetron 
 ```bash
 ## generator raw data (in coda)
 ismrmrd_generate_cartesian_shepp_logan
 ```
-## test it
+## Test it (in conda)
 
 ```bash
 # for default
@@ -31,20 +31,30 @@ gadgetron_ismrmrd_client -f testdata.h5
 # for imagepassthrough
 gadgetron_ismrmrd_client -f testdata.h5 -c default_with_image_passthrough.xml
 ```
-## validate it
+## Validate it
 
 ```bash
 HDFView # old but seems works
 # or
-ismrmrdviewer # which not work here
+# ismrmrdviewer # which not work here
 ```
-# More information
+# Pipeline Config 
 
-the config /config/default_with_image_passthrough.xml is just default.xml with imagepassthrough gadget insert  before image finish gadget
+The config /config/default_with_image_passthrough.xml is just default.xml with imagepassthrough gadget insert  before image finish gadget
 
-# Debug in vscode
+# [Debug] In vscode
 
-Tips: we assume you work under $HOME/work dir
+Tips: here assume you work under $HOME/work dir
+
+# [Debug] library load
+```bash
+nm -gCD libg4f_imagepassthroughgadget.so |grep gadget_factory_export_
+
+# you should get something like 
+# 0000000000015010 V gadget_factory_export_ImagePassthroughGadget
+```
+
+# [TODO] win32 dll import/export problem?
 
 # Refs:
 
