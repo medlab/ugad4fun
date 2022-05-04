@@ -1,0 +1,23 @@
+<configuration>
+    <version>2</version>
+    <readers>
+        <reader>
+            <classname>AcquisitionReader</classname>
+            <dll>gadgetron_core_readers</dll>
+        </reader>
+    </readers>
+
+    <stream>
+               <external>
+                   <execute name="gadgetron.examples.recon_acquisitions" target="recon_acquisitions" type="python"/>
+                </external> 
+     
+    </stream>
+
+    <writers>
+        <writer>
+            <classname>ImageWriter</classname>
+            <dll>gadgetron_core_writers</dll>
+        </writer>
+    </writers>
+</configuration>

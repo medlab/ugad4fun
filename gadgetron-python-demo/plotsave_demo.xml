@@ -1,0 +1,22 @@
+<configuration>
+    <version>2</version>
+    <readers>
+        <reader>
+            <classname>AcquisitionReader</classname>
+            <dll>gadgetron_core_readers</dll>
+        </reader>
+    </readers>
+
+    <stream>
+           <external>
+               <execute name="plotsave_demo" target="do_work" type="python"/>
+            </external>
+    </stream>
+
+    <writers>
+        <writer>
+            <classname>ImageWriter</classname>
+            <dll>gadgetron_core_writers</dll>
+        </writer>
+    </writers>
+</configuration>
