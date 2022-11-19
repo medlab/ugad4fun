@@ -43,6 +43,12 @@ gadgetron
 #   tips: you can run on different port like: gadgetron_ismrmrd_client -f testdata.h5  -p 10002 -c passthough_demo.xml
 gadgetron_ismrmrd_client -f testdata.h5 -c passthough_demo.xml
 
+# 7. view it
+# #pip3 install git+https://github.com/ismrmrd/ismrmrdviewer.git
+# #or use HDFView
+# ismrmrdviewer does not work for me, and the gadgetron_ismrmrd_client seems ignore line data back to it
+ismrmrdviewer
+
 ```
 
 ### 本机开发(同样依托Conda)
@@ -63,3 +69,4 @@ gadgetron_ismrmrd_client -f testdata.h5 -c passthough_demo.xml
 3. https://github.com/medlab/gadgetron-python-demo
 4. https://github.com/gadgetron/GadgetronOnlineClass
 5. https://github.com/chidiugonna/learn-gadgetron
+6. https://github.com/ismrmrd/ismrmrdviewer
