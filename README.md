@@ -47,6 +47,7 @@ gadgetron_ismrmrd_client -f testdata.h5 -c passthough_demo.xml
 # #pip3 install git+https://github.com/ismrmrd/ismrmrdviewer.git
 # #or use HDFView
 # ismrmrdviewer does not work for me, and the gadgetron_ismrmrd_client seems ignore line data back to it
+# BTW, ismrmrdviewer must run on you host conda!
 ismrmrdviewer
 
 ```
