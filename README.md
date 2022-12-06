@@ -21,7 +21,7 @@
 # 4. cd work
 # 5. clone this project
 
-# 1. open gadgetron in dev container
+# 1. open gadgetron in dev container -k
 #  # build&install gadgetron, https://gadgetron.readthedocs.io/en/latest/building.html#building-in-conda-environment
 #  # tips: for release you should change CMAKE_BUILD_TYPE to Release
 #  mkdir build
