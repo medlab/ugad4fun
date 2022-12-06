@@ -24,6 +24,8 @@
 # 1. open gadgetron in dev container
 #  # build&install gadgetron, https://gadgetron.readthedocs.io/en/latest/building.html#building-in-conda-environment
 #  # tips: for release you should change CMAKE_BUILD_TYPE to Release
+#  mkdir build
+#  cd build
 #  cmake -GNinja -DCMAKE_BUILD_TYPE=Debug -DUSE_MKL=ON -DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX} ../
 #  # tips, change 13 to your cpu core number+1
 #  cmake --build . -- -j13
