@@ -21,9 +21,11 @@
 # 4. cd work
 # 5. clone this project
 
-# 1. open gadgetron in dev container
+# 1. open gadgetron in dev container -k
 #  # build&install gadgetron, https://gadgetron.readthedocs.io/en/latest/building.html#building-in-conda-environment
 #  # tips: for release you should change CMAKE_BUILD_TYPE to Release
+#  mkdir build
+#  cd build
 #  cmake -GNinja -DCMAKE_BUILD_TYPE=Debug -DUSE_MKL=ON -DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX} ../
 #  # tips, change 13 to your cpu core number+1
 #  cmake --build . -- -j13
@@ -35,7 +37,7 @@ ln -s $PWD/passthough_demo.xml $CONDA_PREFIX/share/gadgetron/config/passthough_d
 ln -s $PWD/passthough_demo.py $CONDA_PREFIX/share/gadgetron/python/passthough_demo.py 
 
 # 4. generate test data
-ismrmrd_generate_cartesian_shepp_logan
+ismrmrd_generate_cartesian_shepp_logan -k
 # 5. [first terminal] start a gadgetron instance
 #   tips: you can run on different port like: gadgetron -p 10002
 gadgetron 
