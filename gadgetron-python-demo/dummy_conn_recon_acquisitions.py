@@ -36,6 +36,15 @@ if __main__:
     conn=dummy_conn(data_path, save_path, plot=True if save_path is None else False)
 
     recon(conn)
+    
+tip:
+# extracting kspace line data to reconstruct images
+for now, the method to extract line data, for reconstructing images, is not very reliable
+what we do is 
+1. find raw data has the flag ismrmrd.ACQ_FIRST_IN_SLICE
+2. set append_acq = True
+3. if the flag is ismrmrd.ACQ_LAST_IN_SLICE, append once, then stop
+4. in this case, some data are gonna dropped(for now, not needed), be careful with that
 
 """
 import itertools
@@ -70,15 +79,15 @@ class DummyConn:
         print(f'{self.dataset.number_of_acquisitions()} acquisitions included')
 
         acquisition = []
-        append_info = False
+        append_acq = False
         for acq_num in range(self.dataset.number_of_acquisitions()):
             acq = self.dataset.read_acquisition(acq_num)
             if acq.is_flag_set(ismrmrd.ACQ_FIRST_IN_SLICE):
-                append_info = True
+                append_acq = True
             if acq.is_flag_set(ismrmrd.ACQ_LAST_IN_SLICE):
-                append_info = False
+                append_acq = False
             acquisition.append(acq)
-            if not append_info:
+            if not append_acq:
                 break
         print(f'{len(acquisition)} raw data extracted')
         self.acquisition = iter(acquisition)
@@ -93,6 +102,7 @@ class DummyConn:
             ax.set_aspect(image_data.shape[0] / image_data.shape[1])
             ax.set_title('image')
             ax.axis('off')
+            plt.show()
         else:
             print('Saving images...')
             self.save_dataset = ismrmrd.Dataset(self.save_path)
@@ -216,21 +226,25 @@ def reconstruct_images(buffers, header):
             field_of_view=(field_of_view.x, field_of_view.y, field_of_view.z),
             transpose=True, # this will transpose the image data
         )
+        
+def recon(conn):
+    acquisitions = iter(conn)
+    buffers = accumulate_acquisitions(acquisitions, conn.header)
+    images = reconstruct_images(buffers, conn.header)
+
+    for image in images:
+        conn.send(image)
+    
 
 
 if __name__ == '__main__':
 
-    h5_path = pathlib.Path(rf'../testdata/testdata_with_k.h5').absolute()
-    save_path = pathlib.Path(rf'../testdata/testdata_with_k_out.h5').absolute()
+
+    h5_path = pathlib.Path(rf'../testdata_full.h5').absolute()
+    save_path = pathlib.Path(rf'../testdata_full_out.h5').absolute()
     # dummy_conn = DummyConn(h5_path, save_path)  # to save ismrmrd
     dummy_conn = DummyConn(h5_path)   # to plot image
     dummy_conn.get_acquisitions()
-
-    acquisitions = iter(dummy_conn)
-    buffers = accumulate_acquisitions(acquisitions, dummy_conn.header)
-    images = reconstruct_images(buffers, dummy_conn.header)
-
-    for image in images:
-        dummy_conn.send(image)
-
+    recon(dummy_conn)
     dummy_conn.close()
+ 
