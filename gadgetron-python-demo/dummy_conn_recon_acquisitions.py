@@ -47,6 +47,8 @@ what we do is
 4. in this case, some data are gonna dropped(for now, not needed), be careful with that
 
 """
+import time
+import argparse
 import itertools
 import ismrmrd
 import pathlib
@@ -59,6 +61,23 @@ from pynufft import NUFFT
 
 class DummyConn:
     def __init__(self, dataset_path, save_path=None):
+        """A dummy connection for reconstructing radial rawdata locally
+
+        Parameters
+        ----------
+        dataset_path : str | pathlib.Path
+            ismrmrd dataset path (should be a .h5 file)
+        save_path : str | pathlib.Path, optional
+            recon result output path, by default None
+            if None, plot images
+
+        Raises
+        ------
+        NameError
+            wrong input file format
+        FileNotFoundError
+            input file not exists
+        """
         self.dataset_path = dataset_path
         self.save_path = save_path
         self.plot_mode = False if save_path else True
@@ -75,22 +94,25 @@ class DummyConn:
         print(f'Extracting Header info...')
         self.header = ismrmrd.xsd.CreateFromDocument(self.dataset.read_xml_header())
 
-    def get_acquisitions(self):
-        print(f'{self.dataset.number_of_acquisitions()} acquisitions included')
+    def filter(self, predicate):
+        if predicate is ismrmrd.acquisition.Acquisition:
+            print(f'{self.dataset.number_of_acquisitions()} acquisitions included')
 
-        acquisition = []
-        append_acq = False
-        for acq_num in range(self.dataset.number_of_acquisitions()):
-            acq = self.dataset.read_acquisition(acq_num)
-            if acq.is_flag_set(ismrmrd.ACQ_FIRST_IN_SLICE):
-                append_acq = True
-            if acq.is_flag_set(ismrmrd.ACQ_LAST_IN_SLICE):
-                append_acq = False
-            acquisition.append(acq)
-            if not append_acq:
-                break
-        print(f'{len(acquisition)} raw data extracted')
-        self.acquisition = iter(acquisition)
+            acquisition = []
+            append_acq = False
+            for acq_num in range(self.dataset.number_of_acquisitions()):
+                acq = self.dataset.read_acquisition(acq_num)
+                if acq.is_flag_set(ismrmrd.ACQ_FIRST_IN_SLICE):
+                    append_acq = True
+                if acq.is_flag_set(ismrmrd.ACQ_LAST_IN_SLICE):
+                    append_acq = False
+                acquisition.append(acq)
+                if not append_acq:
+                    break
+            print(f'{len(acquisition)} raw data extracted')
+            self.acquisition = iter(acquisition)
+        else:
+            print(f'Not supported {predicate}')
 
     def send(self, image):
         if self.plot_mode:
@@ -212,7 +234,7 @@ def reconstruct_images(buffers, header):
         NufftObj.plan(traj_reshape, Nd, Kd, Jd)
         img = np.empty((Nd[0], Nd[1], kspace_data_reshape.shape[1]), dtype=np.complex128)
         for index, current_raw_data in enumerate(kspace_data_reshape.transpose(1, 0)):
-            img[:, :, index] = NufftObj.solve(current_raw_data, solver='cg', maxiter=50)
+            img[:, :, index] = NufftObj.solve(current_raw_data, solver='cg', maxiter=25)
         image_final = combine_channels(img)
         print('reconstruct images finished!')
         return image_final
@@ -228,6 +250,7 @@ def reconstruct_images(buffers, header):
         )
         
 def recon(conn):
+    conn.filter(ismrmrd.acquisition.Acquisition)
     acquisitions = iter(conn)
     buffers = accumulate_acquisitions(acquisitions, conn.header)
     images = reconstruct_images(buffers, conn.header)
@@ -239,12 +262,22 @@ def recon(conn):
 
 if __name__ == '__main__':
 
+    help_msg = "Radial recon using dummy connection"
 
-    h5_path = pathlib.Path(rf'../testdata_full.h5').absolute()
-    save_path = pathlib.Path(rf'../testdata_full_out.h5').absolute()
-    # dummy_conn = DummyConn(h5_path, save_path)  # to save ismrmrd
-    dummy_conn = DummyConn(h5_path)   # to plot image
-    dummy_conn.get_acquisitions()
+    parser = argparse.ArgumentParser(description=help_msg)
+    parser.add_argument('input_path', type=str,
+                        help='the input path of an ismrmrd data')
+    parser.add_argument('-o', '--out_path', type=str,
+                        help='the output path of recon')
+    
+    args = parser.parse_args()
+    input_path = pathlib.Path(args.input_path).absolute()
+    output_path = pathlib.Path(args.out_path).absolute() if args.out_path else None
+
+    start_time = time.time()
+    dummy_conn = DummyConn(input_path, output_path)
     recon(dummy_conn)
     dummy_conn.close()
+
+    print(f'time costed {round(time.time() - start_time, 2)}s')
  
