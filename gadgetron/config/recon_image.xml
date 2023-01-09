@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <version>2</version>
+
+    <readers>
+        <reader>
+            <dll>gadgetron_mricore</dll>
+            <classname>GadgetIsmrmrdAcquisitionMessageReader</classname>
+        </reader>
+        <reader>
+            <dll>gadgetron_mricore</dll>
+            <classname>GadgetIsmrmrdWaveformMessageReader</classname>
+        </reader>
+    </readers>
+    <writers>
+        <writer>
+            <dll>gadgetron_core_writers</dll>
+            <classname>ImageWriter</classname>
+        </writer>
+    </writers>
+
+    <stream>
+        <external>
+            <execute name="recon_image" target="recon_acquisitions" type="python"/>
+            <configuration/>
+        </external>
+    </stream>
+
+</configuration>

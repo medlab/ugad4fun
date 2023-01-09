@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <version>2</version>
+
+    <readers>
+        <reader>
+            <dll>gadgetron_mricore</dll>
+            <classname>GadgetIsmrmrdAcquisitionMessageReader</classname>
+        </reader>
+    </readers>
+    <writers>
+        <writer>
+            <dll>gadgetron_core_writers</dll>
+            <classname>ImageWriter</classname>
+        </writer>
+    </writers>
+
+    <stream>
+        <external>
+            <execute name="radial_recon" target="do_work" type="python"/>
+            <configuration/>
+        </external>
+    </stream>
+</configuration>
