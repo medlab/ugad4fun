@@ -74,6 +74,10 @@ $ cd gadpipe/gadpipe
 $ ln -s $PWD/recon/*.py $CONDA_PREFIX/share/gadgetron/python/
 $ ln -s $PWD/recon_config $CONDA_PREFIX/share/gadgetron/config/
 ```
+3. if you only want to use our library, you could install it using pip
+```bash
+$ pip install .
+```
 
 ### Deployment  
 
