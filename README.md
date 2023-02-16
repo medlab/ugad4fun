@@ -1,75 +1,114 @@
-# test by hand about gadgetron
+# Gadgetron Pipelines of Medical Images Reconstruction
 
-# 环境
-## 研发环境
-### VS Code DevContainer（本质上是在Docker中开发）(首选)
+> GadPipe: A Python Library for Reconstructing MRI Images using Gadgetron Framework.
 
-先在VS Code中安装 Remote Development 远程开发扩展包
+## Introduction
 
-### Python 模块开发
+GadPipe is an application-level library, based on Gadgetron pipelines, to do reconstruction on MRI images.  
 
-1. 可以在Gadgetron项目中建立一个工作目录，如work，在里面直接本clone本项目
-2. 把相关Python/xml链接到对应配置目录
-3. 在VS Code中玩起来
-
-### 流程示意
-
+## Prerequisite
+1. clone gadgetron to your workspace
 ```bash
-# 1. git clone gadgetron 
-# 2. cd gadgetron
-# 3. mkdir work
-# 4. cd work
-# 5. clone this project
+$ git clone https://github.com/gadgetron/gadgetron.git
+$ cd gadgetron
+```
+2. create a conda environment using environment.yml
+```bash
+# using mamba to create the gadgetron environment is faster
 
-# 1. open gadgetron in dev container -k
-#  # build&install gadgetron, https://gadgetron.readthedocs.io/en/latest/building.html#building-in-conda-environment
-#  # tips: for release you should change CMAKE_BUILD_TYPE to Release
-#  mkdir build
-#  cd build
-#  cmake -GNinja -DCMAKE_BUILD_TYPE=Debug -DUSE_MKL=ON -DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX} ../
-#  # tips, change 13 to your cpu core number+1
-#  cmake --build . -- -j13
-#  cmake --build . --target install
-# 2. cd gadgetron-4-fun/gadgetron-python-demo
-# 3. link gadgetron config file and python module from gadgetron-4-fun
+# use base environment to install mamba
+$ conda activate
+$ conda install mamba -c conda-forge
 
-ln -s $PWD/passthough_demo.xml $CONDA_PREFIX/share/gadgetron/config/passthough_demo.xml
-ln -s $PWD/passthough_demo.py $CONDA_PREFIX/share/gadgetron/python/passthough_demo.py 
+# use mamba to create environment
+$ mamba env create -f environment.yml
+```
+3. start gadgetron environment, then build gadgetron
+```bash
+$ conda activate gadegtron
 
-# 4. generate test data
-ismrmrd_generate_cartesian_shepp_logan -k
-# 5. [first terminal] start a gadgetron instance
-#   tips: you can run on different port like: gadgetron -p 10002
-gadgetron 
-# 6. [second terminal] run test data with you config and python module 
-#   tips: you can run on different port like: gadgetron_ismrmrd_client -f testdata.h5  -p 10002 -c passthough_demo.xml
-gadgetron_ismrmrd_client -f testdata.h5 -c passthough_demo.xml
+$ mkdir -p build
+$ cd build
+$ cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DUSE_MKL=ON -DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX} ../
+$ ninja
+$ ninja install
+```
+4. test gadgetron
+```bash
+# check gadgetron info
+$ gadgetron --info
 
-# 7. view it
-# #pip3 install git+https://github.com/ismrmrd/ismrmrdviewer.git
-# #or use HDFView
-# ismrmrdviewer does not work for me, and the gadgetron_ismrmrd_client seems ignore line data back to it
-# BTW, ismrmrdviewer must run on you host conda!
-ismrmrdviewer
-
+# start a gadgetron server
+$ gadgetron
 ```
 
-### 本机开发(同样依托Conda)
+Generate an ismrmrd raw data and do reconstruction using gadgetron
+```bash
+# generate a dataset in the current working directory (./testdata.h5) with 8 coils and 10 repetitions.
+$ ismrmrd_generate_cartesian_shepp_logan -r 10
 
-(在本机环境尝试没有成功, 原因不详)
+$ gadgetron_ismrmrd_client -f testdata.h5
+Gadgetron ISMRMRD client
+  -- host            :      localhost
+  -- port            :      9002
+  -- hdf5 file  in   :      testdata.h5
+  -- hdf5 group in   :      /dataset
+  -- conf            :      default.xml
+  -- loop            :      1
+  -- hdf5 file out   :      out.h5
+  -- hdf5 group out  :      2022-03-08 00:35:04
+```
+Now you could see a out.h5 file in the current directory.
 
-参照 https://gadgetron.readthedocs.io/en/latest/building.html#setting-up-a-development-environment
+## Usage
 
-## 发布环境
-### Docker
-基于官方包做一个新的docker镜像去安装
-### Conda
-直接打包然后原地解开使用
+### Research and Development  
 
-# refs:
+1. clone this repository to your workspace
+```bash
+$ git clone https://github.com/medlab/gadpipe
+$ cd gadpipe/gadpipe
+```
+2. link the python script and config directory to gadgetron-required python and config directory
+```bash
+$ ln -s $PWD/recon/*.py $CONDA_PREFIX/share/gadgetron/python/
+$ ln -s $PWD/recon_config $CONDA_PREFIX/share/gadgetron/config/
+```
+
+### Deployment  
+
+Clone the repository to your workspace, then create a Docker image using scripts provided.
+```bash
+$ git clone https://github.com/medlab/gadpipe
+$ cd gadegtron-4-fun/shell
+$ bash create_gad_image.sh
+$ bash start_gad_container.sh
+```
+
+
+
+## Example
+```bash
+$ conda activate gadegtron  # skip this step in Docker, only in R&D scenario
+
+# generate a raw data with k space trajectory
+$ ismrmrd_generate_cartesian_shepp_logan -k
+
+# start a gadgetron server
+$ gadgetron  
+```   
+  
+In another shell  
+```bash
+$ gadgetron_ismrmrd_client -f testdata.h5 -c recon_config/recon_radial.xml
+```  
+
+Expected image:
+![recon_example](fig/recon_example.png)  
+
+# Reference:
 1. https://gadgetron2020.sciencesconf.org/
 2. https://gadgetron.readthedocs.io/
-3. https://github.com/medlab/gadgetron-python-demo
-4. https://github.com/gadgetron/GadgetronOnlineClass
-5. https://github.com/chidiugonna/learn-gadgetron
-6. https://github.com/ismrmrd/ismrmrdviewer
+3. https://github.com/gadgetron/GadgetronOnlineClass
+4. https://github.com/chidiugonna/learn-gadgetron
+5. https://github.com/ismrmrd/ismrmrdviewer
