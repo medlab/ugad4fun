@@ -22,7 +22,7 @@
 
     <stream>
         <external>
-            <execute name="dummy_conn_recon_acquisitions" target="recon" type="python"/>
+            <execute name="radial_recon" target="recon" type="python"/>
             <configuration/>
         </external>
     </stream>

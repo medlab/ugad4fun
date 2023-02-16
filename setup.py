@@ -12,14 +12,16 @@ setup(
     author='ADEPT',
     license='MIT',
     version=version,
-    description='gadgetron for fun',
+    description='reconstruction pipelines based on gadgetron',
     include_package_data=True,
     packages=[
         'gad4fun',
         'gad4fun/utils',
-        'gad4fun/demo',
+        'gad4fun/recon',
         ],
-    package_data={'gad4fun/config_4fun': ['radial_recon.xml']},
+    package_data={
+        "gad4fun/recon_config": ["*.xml"] ,  # all the config files(xml)
+        },
     install_requires=[
         'numpy',
         'pynufft',
