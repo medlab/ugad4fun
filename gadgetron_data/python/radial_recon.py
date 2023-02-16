@@ -120,7 +120,6 @@ def reconstruct_images(buffers, header):
         print('K space data shape: ', kspace_data.shape)
         kspace_data_reshape = kspace_data.reshape(-1, kspace_data.shape[2])
 
-        traj = (traj + 0.5) * 2 * np.pi - np.pi
         traj_reshape = traj.reshape(-1, traj.shape[2])
 
         # image size
