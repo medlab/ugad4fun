@@ -3,7 +3,7 @@ from setuptools import setup
 from pathlib import Path
 
 version = None
-with open(Path(rf"ugadget\version.py")) as f:
+with open(Path(rf"ugadget/version.py")) as f:
     version = f.read().split('=')[1].strip().strip('\'')
 if version is None:
     raise RuntimeError('Could not determine version')
