@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <version>2</version>
+
+    <readers>
+        <reader>
+            <dll>gadgetron_mricore</dll>
+            <classname>GadgetIsmrmrdAcquisitionMessageReader</classname>
+        </reader>
+    </readers>
+
+    <writers>
+        <writer>
+            <dll>gadgetron_mricore</dll>
+            <classname>GadgetIsmrmrdAcquisitionMessageWriter</classname>
+        </writer>
+    </writers>
+
+    <stream>
+        <external>
+            <execute name="ugad4fun.recon.line_in_line_out" target="do_work" type="python"/>
+            <configuration/>
+        </external>
+    </stream>
+</configuration>
