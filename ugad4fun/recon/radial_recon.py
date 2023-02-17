@@ -14,13 +14,18 @@ from ugad4fun.utils.dummy_conn import DummyConn
 def accumulate_acquisitions(acquisitions, header):
     accumulated_acquisitions = []
     matrix_size = header.encoding[0].encodedSpace.matrixSize
-    print(matrix_size)
+    print("matrix_size.x=" + str(matrix_size.x))
+    print("matrix_size.y=" + str(matrix_size.y))
+    print("matrix_size.z=" + str(matrix_size.z))
 
     def assemble_buffer(acqs):
         print(f"Assembling buffer from {len(acqs)} acquisitions.")
 
         number_of_channels, number_of_samples = acqs[0].data.shape
         trajectory_dimensions = acqs[0].trajectory_dimensions
+        print("number_of_channels=" + str(number_of_channels))
+        print("number_of_samples=" + str(number_of_samples))
+        print("trajectory_dimensions=" + str(trajectory_dimensions))
 
         raw_buffer = np.zeros(
             (matrix_size.x,
@@ -47,7 +52,7 @@ def accumulate_acquisitions(acquisitions, header):
             raw_buffer[:, acq.idx.kspace_encode_step_1, acq.idx.kspace_encode_step_2, :] = acq.data.transpose(1, 0)
             
             # pynufft needs traj to be in the range of [-pi, pi]
-            traj = (traj - traj.min()) / (traj.max() - traj.min()) * 2 * np.pi - np.pi
+            # traj = (traj - traj.min()) / (traj.max() - traj.min()) * 2 * np.pi - np.pi
             traj_buffer[:, acq.idx.kspace_encode_step_1, acq.idx.kspace_encode_step_2, :] = traj
         return raw_buffer, traj_buffer
 
@@ -117,19 +122,26 @@ def reconstruct_images(buffers, header):
             reconstruct_image(data),
             acquisition=reference,
             image_index=next(indices),
-            image_type=ismrmrd.IMTYPE_COMPLEX,
+            image_type=ismrmrd.IMTYPE_MAGNITUDE,
+            # data_type=ismrmrd.DATATYPE_FLOAT,
+            data_type=ismrmrd.DATATYPE_CXFLOAT,
             field_of_view=(field_of_view.x, field_of_view.y, field_of_view.z),
             transpose=True, # this will transpose the image data
         )
         
 def recon(conn):
+    print("Python reconstruction running - reconstructing images from acquisitions.")
     conn.filter(ismrmrd.acquisition.Acquisition)
     acquisitions = iter(conn)
     buffers = accumulate_acquisitions(acquisitions, conn.header)
     images = reconstruct_images(buffers, conn.header)
 
     for image in images:
+        print("Sending image back to client.")
+        print(f"image.matrix_size = '{image.matrix_size}'")
         conn.send(image)
+    
+    print("radial image recon done.")
     
 
 

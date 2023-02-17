@@ -4,15 +4,14 @@
 
     <readers>
         <reader>
-            <dll>gadgetron_core_readers</dll>
-            <classname>AcquisitionReader</classname>
+            <dll>gadgetron_mricore</dll>
+            <classname>GadgetIsmrmrdAcquisitionMessageReader</classname>
         </reader>
         <reader>
-            <dll>gadgetron_core_readers</dll>
-            <classname>WaveformReader</classname>
+            <dll>gadgetron_mricore</dll>
+            <classname>GadgetIsmrmrdWaveformMessageReader</classname>
         </reader>
     </readers>
-
     <writers>
         <writer>
             <dll>gadgetron_core_writers</dll>
@@ -22,8 +21,9 @@
 
     <stream>
         <external>
-            <execute name="ugad4fun.recon.radial_recon" target="recon" type="python"/>
+            <execute name="ugad4fun.recon.image_recon" target="recon_acquisitions" type="python"/>
             <configuration/>
         </external>
     </stream>
+
 </configuration>
