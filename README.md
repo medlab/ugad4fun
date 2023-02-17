@@ -113,8 +113,8 @@ ln -s $PWD/ugad4fun/recon_config $CONDA_PREFIX/share/gadgetron/config/recon_conf
 
 Clone the repository to your workspace, then create a Docker image using scripts provided.
 ```bash
-git clone https://github.com/medlab/ugad4fun
-cd ugad4fun/shell
+git clone https://github.com/medlab/ugad4fun.git
+cd ugad4fun/scripts
 bash create_gad_image.sh
 bash start_gad_container.sh
 ```
