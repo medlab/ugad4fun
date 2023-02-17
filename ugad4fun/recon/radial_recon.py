@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from pynufft import NUFFT
-from ugadget.utils.dummy_conn import DummyConn
+from ugad4fun.utils.dummy_conn import DummyConn
 
 
 def accumulate_acquisitions(acquisitions, header):
