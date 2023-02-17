@@ -3,27 +3,27 @@ from setuptools import setup
 from pathlib import Path
 
 version = None
-with open(Path(rf"ugadget/version.py")) as f:
+with open(Path(rf"ugad4fun/version.py")) as f:
     version = f.read().split('=')[1].strip().strip('\'')
 if version is None:
     raise RuntimeError('Could not determine version')
 
 setup(
-    name='ugadget',
+    name='ugad4fun',
     author='ADEPT',
     license='MIT',
     version=version,
     description='reconstruction pipelines based on gadgetron framework',
     include_package_data=True,
     packages=[
-        'ugadget',
-        'ugadget/utils',
-        'ugadget/workflow',
-        'ugadget/tests',
+        'ugad4fun',
+        'ugad4fun/utils',
+        'ugad4fun/recon',
+        'ugad4fun/tests',
         ],
     package_data={
-        "ugadget": [
-            op.join("workflow_config", "*.xml"), # all the config files(xml)
+        "ugad4fun": [
+            op.join("recon_config", "*.xml"), # all the config files(xml)
             ],  
         },
     install_requires=[
@@ -33,6 +33,6 @@ setup(
         'matplotlib'
         ],
     project_urls={
-        'Source': 'https://github.com/medlab/ugadget',
+        'Source': 'https://github.com/medlab/ugad4fun',
         },
 )
