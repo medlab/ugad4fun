@@ -22,7 +22,7 @@
 
     <stream>
         <external>
-            <execute name="radial_recon" target="recon" type="python"/>
+            <execute name="ugadget.workflow.radial_recon" target="recon" type="python"/>
             <configuration/>
         </external>
     </stream>
