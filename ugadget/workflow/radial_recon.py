@@ -47,7 +47,7 @@ def accumulate_acquisitions(acquisitions, header):
             raw_buffer[:, acq.idx.kspace_encode_step_1, acq.idx.kspace_encode_step_2, :] = acq.data.transpose(1, 0)
             
             # pynufft needs traj to be in the range of [-pi, pi]
-            # traj = (traj - traj.min()) / (traj.max() - traj.min()) * 2 * np.pi - np.pi
+            traj = (traj - traj.min()) / (traj.max() - traj.min()) * 2 * np.pi - np.pi
             traj_buffer[:, acq.idx.kspace_encode_step_1, acq.idx.kspace_encode_step_2, :] = traj
         return raw_buffer, traj_buffer
 
@@ -65,16 +65,28 @@ def reconstruct_images(buffers, header):
     kspace_size = header.encoding[0].encodedSpace.matrixSize
     matrix = header.encoding[0].reconSpace.matrixSize
 
-    def combine_channels(image_data):
+    def combine_channels(img):
         # The buffer contains complex images, one for each channel. We combine these into a single image
         # through a sum of squares along the channels (axis 2).
 
-        return np.sqrt(np.sum(np.square(np.abs(image_data)), axis=2))
-
+        # return np.sqrt(np.sum(np.square(np.abs(img)), axis=2))
+        combined_complex_img = np.zeros_like(img[:, :, 0])
+        for x in range(img.shape[0]):
+            for y in range(img.shape[1]):
+                mag = 0
+                phase = 0
+                for ch in range(img.shape[2]):
+                    img_data = img[x, y, ch]
+                    mag_tmp = img_data.real ** 2 + img_data.imag ** 2
+                    phase += mag_tmp * np.angle(img_data)
+                    mag += mag_tmp
+                combined_complex_img[x, y] = np.sqrt(mag) * np.exp(complex(0, phase / mag))
+        return combined_complex_img
+        
     def reconstruct_image(data):
         # Reconstruction is a pynufft fft in this case.
         kspace_data = data[0].squeeze()
-        traj = data[1].squeeze()
+        traj = data[1].squeeze()    
         print('Trajectory shape: ', traj.shape)
         print('K space data shape: ', kspace_data.shape)
         kspace_data_reshape = kspace_data.reshape(-1, kspace_data.shape[2])
@@ -105,7 +117,7 @@ def reconstruct_images(buffers, header):
             reconstruct_image(data),
             acquisition=reference,
             image_index=next(indices),
-            image_type=ismrmrd.IMTYPE_MAGNITUDE,
+            image_type=ismrmrd.IMTYPE_COMPLEX,
             field_of_view=(field_of_view.x, field_of_view.y, field_of_view.z),
             transpose=True, # this will transpose the image data
         )
