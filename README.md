@@ -100,11 +100,11 @@ Now you could see a out.h5 file in the current directory.
 git clone https://github.com/medlab/ugadget
 cd ugadget
 ```
-2. using pip to install this package
+2. use pip to install this package
 ```bash
 pip install . -U
 ```
-1. link the config directory to gadgetron-required location
+3. link the config directory to gadgetron-required location
 ```bash
 ln -s $PWD/ugadget/workflow_config $CONDA_PREFIX/share/gadgetron/config/workflow_config
 ```
@@ -113,8 +113,8 @@ ln -s $PWD/ugadget/workflow_config $CONDA_PREFIX/share/gadgetron/config/workflow
 
 Clone the repository to your workspace, then create a Docker image using scripts provided.
 ```bash
-git clone https://github.com/medlab/gadpipe
-cd gadegtron-4-fun/shell
+git clone https://github.com/medlab/ugadget
+cd ugadget/shell
 bash create_gad_image.sh
 bash start_gad_container.sh
 ```
