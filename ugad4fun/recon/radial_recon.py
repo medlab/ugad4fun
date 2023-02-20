@@ -118,6 +118,7 @@ def reconstruct_images(buffers, header):
         return image_final
 
     for reference, data in buffers:
+        print("image_index = " + str(indices))
         yield ismrmrd.image.Image.from_array(
             reconstruct_image(data),
             acquisition=reference,
