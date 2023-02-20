@@ -3,6 +3,7 @@ import argparse
 import itertools
 import ismrmrd
 import pathlib
+import warnings
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -11,36 +12,45 @@ from pynufft import NUFFT
 from ugad4fun.utils.dummy_conn import DummyConn
 
 
+
+warnings.filterwarnings("ignore")
+
 def accumulate_acquisitions(acquisitions, header):
     accumulated_acquisitions = []
-    matrix_size = header.encoding[0].encodedSpace.matrixSize
-    print("matrix_size.x=" + str(matrix_size.x))
-    print("matrix_size.y=" + str(matrix_size.y))
-    print("matrix_size.z=" + str(matrix_size.z))
+    
+    k_space_size = header.encoding[0].encodedSpace.matrixSize
+    num_of_samples, number_of_pe_lines, num_of_slices = k_space_size.x, k_space_size.y, k_space_size.z
+    print("-" * 50)
+    print(rf"{'num_of_samples'.ljust(20)}{num_of_samples}")
+    print(rf"{'number_of_pe_lines'.ljust(20)}{number_of_pe_lines}")
+    print(rf"{'num_of_slices'.ljust(20)}{num_of_slices}")
+    print("-" * 50)
 
     def assemble_buffer(acqs):
-        print(f"Assembling buffer from {len(acqs)} acquisitions.")
-
-        number_of_channels, number_of_samples = acqs[0].data.shape
-        trajectory_dimensions = acqs[0].trajectory_dimensions
-        print("number_of_channels=" + str(number_of_channels))
-        print("number_of_samples=" + str(number_of_samples))
-        print("trajectory_dimensions=" + str(trajectory_dimensions))
+        print(f"assembling buffers from {len(acqs)} acquisitions.")
+        
+        num_of_channels = acqs[0].data.shape[0]
+        print(rf"{'num_of_channels'.ljust(20)}{num_of_channels}")
+        
+        num_of_traj_dims = acqs[0].trajectory_dimensions
+        print(rf"{'num_of_traj_dims'.ljust(20)}{num_of_traj_dims}")
+        print("-" * 50)
+    
 
         raw_buffer = np.zeros(
-            (matrix_size.x,
-             matrix_size.y,
-             matrix_size.z,
-             number_of_channels,
+            (num_of_samples,
+             number_of_pe_lines,
+             num_of_slices,
+             num_of_channels,
              ),
             dtype=np.complex64
         )
 
         traj_buffer = np.zeros(
-            (matrix_size.x,
-             matrix_size.y,
-             matrix_size.z,
-             trajectory_dimensions
+            (num_of_samples,
+             number_of_pe_lines,
+             num_of_slices,
+             num_of_traj_dims
              ),
             dtype=np.float32
         )
@@ -54,7 +64,7 @@ def accumulate_acquisitions(acquisitions, header):
             # pynufft needs traj to be in the range of [-pi, pi]
             # traj = (traj - traj.min()) / (traj.max() - traj.min()) * 2 * np.pi - np.pi
             traj_buffer[:, acq.idx.kspace_encode_step_1, acq.idx.kspace_encode_step_2, :] = traj
-        return raw_buffer, traj_buffer
+        return raw_buffer, traj_buffer[:, :, 0, :]  # every slice has the same traj, so we just use the traj of the first slice
 
     for acquisition in acquisitions:
         accumulated_acquisitions.append(acquisition)
@@ -67,58 +77,81 @@ def reconstruct_images(buffers, header):
 
     indices = itertools.count(start=1)
     field_of_view = header.encoding[0].reconSpace.fieldOfView_mm
-    kspace_size = header.encoding[0].encodedSpace.matrixSize
+    k_space_size = header.encoding[0].encodedSpace.matrixSize
     matrix = header.encoding[0].reconSpace.matrixSize
+    
+    num_of_samples, num_of_pe_lines, num_of_slices = k_space_size.x, k_space_size.y, k_space_size.z
 
     def combine_channels(img):
         # The buffer contains complex images, one for each channel. We combine these into a single image
         # through a sum of squares along the channels (axis 2).
 
         # return np.sqrt(np.sum(np.square(np.abs(img)), axis=2))
-        combined_complex_img = np.zeros_like(img[:, :, 0])
-        for x in range(img.shape[0]):
-            for y in range(img.shape[1]):
-                mag = 0
-                phase = 0
-                for ch in range(img.shape[2]):
-                    img_data = img[x, y, ch]
-                    mag_tmp = img_data.real ** 2 + img_data.imag ** 2
-                    phase += mag_tmp * np.angle(img_data)
-                    mag += mag_tmp
-                combined_complex_img[x, y] = np.sqrt(mag) * np.exp(complex(0, phase / mag))
+        combined_complex_img = np.zeros_like(img[:, :, :, 0])
+        
+        for z in range(img.shape[2]):
+            start_time = time.time()
+            print("-" * 50)
+            print("combining channels...")
+            print(f"slice: {z}")
+            print("-" * 50)
+            for x in range(img.shape[0]):
+                for y in range(img.shape[1]):
+                    mag = 0
+                    phase = 0
+                    for ch in range(img.shape[3]):
+                        img_data = img[x, y, z, ch]
+                        mag_tmp = img_data.real ** 2 + img_data.imag ** 2
+                        phase += mag_tmp * np.angle(img_data)
+                        mag += mag_tmp
+                    combined_complex_img[x, y, z] = np.sqrt(mag) * np.exp(complex(0, phase / mag))
+            end_time = time.time()
+            print(f"time cost: {end_time - start_time}s")
         return combined_complex_img
         
     def reconstruct_image(data):
         # Reconstruction is a pynufft fft in this case.
-        kspace_data = data[0].squeeze()
-        traj = data[1].squeeze()    
-        print('Trajectory shape: ', traj.shape)
+        kspace_data = data[0]
+        traj = data[1]   
+        print("-" * 50)
         print('K space data shape: ', kspace_data.shape)
-        kspace_data_reshape = kspace_data.reshape(-1, kspace_data.shape[2])
-
+        print('Trajectory shape: ', traj.shape)
+        print("-" * 50)
+        
+        num_of_channels = kspace_data.shape[0]
+        
+        kspace_data_reshape = kspace_data.reshape(-1, num_of_slices, kspace_data.shape[-1])
         traj_reshape = traj.reshape(-1, traj.shape[2])
 
         # image size
         Nd = (matrix.x, matrix.y)
         print('setting image dimension Nd...', Nd)
         # k-space size
-        Kd = (kspace_size.x, kspace_size.y)
+        Kd = (num_of_samples, num_of_pe_lines)
         print('setting spectrum dimension Kd...', Kd)
         # interpolation size
         Jd = (6, 6)
         print('setting interpolation size Jd...', Jd)
+        print("-" * 50)
 
         NufftObj = NUFFT()
         NufftObj.plan(traj_reshape, Nd, Kd, Jd)
-        img = np.empty((Nd[0], Nd[1], kspace_data_reshape.shape[1]), dtype=np.complex128)
-        for index, current_raw_data in enumerate(kspace_data_reshape.transpose(1, 0)):
-            img[:, :, index] = NufftObj.solve(current_raw_data, solver='cg', maxiter=25)
+        img = np.empty((Nd[0], Nd[1], num_of_slices, num_of_channels), dtype=np.complex128)
+        print(f"image shape {img.shape}")
+        print("-" * 50)
+        
+        print("Recontructing...")
+        for slice_num in range(num_of_slices):
+            for ch_num, current_raw_data in enumerate(kspace_data_reshape[:, slice_num, :].transpose(1, 0)):
+                print(f"slice: {slice_num}\t chan: {ch_num}")
+                img[:, :, slice_num, ch_num] = NufftObj.solve(current_raw_data, solver='cg', maxiter=25)
+                
         image_final = combine_channels(img)
-        print('reconstruct images finished!')
+        print('reconstructing images finished!')
         return image_final
 
     for reference, data in buffers:
-        print("image_index = " + str(indices))
+        print(rf"image_index = {indices}")
         yield ismrmrd.image.Image.from_array(
             reconstruct_image(data),
             acquisition=reference,
