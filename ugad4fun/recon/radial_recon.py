@@ -94,7 +94,6 @@ def reconstruct_images(buffers, header):
             print("-" * 50)
             print("combining channels...")
             print(f"slice: {z}")
-            print("-" * 50)
             for x in range(img.shape[0]):
                 for y in range(img.shape[1]):
                     mag = 0
@@ -107,6 +106,10 @@ def reconstruct_images(buffers, header):
                     combined_complex_img[x, y, z] = np.sqrt(mag) * np.exp(complex(0, phase / mag))
             end_time = time.time()
             print(f"time cost: {end_time - start_time}s")
+            if z != img.shape[2] - 1:
+                print("- " * 20)
+            else:
+                print("-" * 50)
         return combined_complex_img
         
     def reconstruct_image(data):
@@ -114,14 +117,18 @@ def reconstruct_images(buffers, header):
         kspace_data = data[0]
         traj = data[1]   
         print("-" * 50)
-        print('K space data shape: ', kspace_data.shape)
-        print('Trajectory shape: ', traj.shape)
+        print('K space data shape\t', kspace_data.shape)
+        print('Trajectory shape\t', traj.shape)
         print("-" * 50)
         
-        num_of_channels = kspace_data.shape[0]
+        num_of_channels = kspace_data.shape[-1]
         
-        kspace_data_reshape = kspace_data.reshape(-1, num_of_slices, kspace_data.shape[-1])
-        traj_reshape = traj.reshape(-1, traj.shape[2])
+        kspace_data_reshape = kspace_data.reshape(-1, num_of_slices, num_of_channels)
+        traj_reshape = traj.reshape(-1, traj.shape[-1])
+        print('Reshaped K space data shape\t', kspace_data_reshape.shape)
+        print('Reshaped Trajectory shape\t', traj_reshape.shape)
+        print("-" * 50)
+        
 
         # image size
         Nd = (matrix.x, matrix.y)
@@ -142,16 +149,21 @@ def reconstruct_images(buffers, header):
         
         print("Recontructing...")
         for slice_num in range(num_of_slices):
+            start_time = time.time()
             for ch_num, current_raw_data in enumerate(kspace_data_reshape[:, slice_num, :].transpose(1, 0)):
                 print(f"slice: {slice_num}\t chan: {ch_num}")
                 img[:, :, slice_num, ch_num] = NufftObj.solve(current_raw_data, solver='cg', maxiter=25)
+            end_time = time.time()
+            print(f"time cost: {end_time - start_time}s")
+            if slice_num != num_of_slices - 1:
+                print("- " * 25)
                 
         image_final = combine_channels(img)
         print('reconstructing images finished!')
         return image_final
 
     for reference, data in buffers:
-        print(rf"image_index = {indices}")
+        print(f"image_index\t{indices}")
         yield ismrmrd.image.Image.from_array(
             reconstruct_image(data),
             acquisition=reference,
