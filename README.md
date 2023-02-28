@@ -100,9 +100,9 @@ Now you could see a out.h5 file in the current directory.
 git clone https://github.com/medlab/ugad4fun
 cd ugad4fun
 ```
-2. use pip to install this package
+2. use pip to install this package(-e means editable, which has the advantage of using the latest version when importing an locally edited package)
 ```bash
-pip install . -U
+pip install -e .
 ```
 3. link the config directory to gadgetron-required location
 ```bash
