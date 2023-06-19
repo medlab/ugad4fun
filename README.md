@@ -25,7 +25,7 @@ mamba env create -f environment.yml
 ```
 3. start gadgetron environment, then build gadgetron
 ```bash
-conda activate gadegtron
+conda activate gadgetron
 
 mkdir -p build
 cd build
@@ -97,7 +97,7 @@ Now you could see a out.h5 file in the current directory.
 
 1. clone this repository to your workspace
 ```bash
-git clone https://github.com/medlab/ugad4fun
+git clone https://github.com/medlab/ugad4fun.git
 cd ugad4fun
 ```
 2. use pip to install this package
