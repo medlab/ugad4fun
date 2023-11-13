@@ -40,25 +40,9 @@ class DummyConn:
         self.header = ismrmrd.xsd.CreateFromDocument(self.dataset.read_xml_header())
 
     def filter(self, predicate):
-        if predicate is ismrmrd.acquisition.Acquisition:
-            print(f'{self.dataset.number_of_acquisitions()} acquisitions included')
-
-            acquisition = []
-            append_acq = False
-            for acq_num in range(self.dataset.number_of_acquisitions()):
-                acq = self.dataset.read_acquisition(acq_num)
-                if acq.is_flag_set(ismrmrd.ACQ_FIRST_IN_SLICE):
-                    append_acq = True
-                    
-                if append_acq:
-                    acquisition.append(acq)
-                    
-                if acq.is_flag_set(ismrmrd.ACQ_LAST_IN_SLICE):
-                    break
-            print(f'{len(acquisition)} raw data extracted')
-            self.acquisition = iter(acquisition)
-        else:
-            print(f'{predicate} unsupported')
+        if isinstance(predicate, type):
+            return self.filters.append(lambda o: isinstance(o, predicate))
+        self.filters.append(predicate)
 
     def send(self, image):
         if self.plot_mode:

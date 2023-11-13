@@ -14,13 +14,13 @@ cd gadgetron
 ```
 2. create a conda environment using environment.yml
 ```bash
-# using mamba to create the gadgetron environment is faster
+conda env create -f environment.yml  
+```
 
-# use base environment to install mamba
+> If this step cost forever, you may try mamba, it may save you:
+```bash
 conda activate
 conda install mamba -c conda-forge
-
-# use mamba to create environment
 mamba env create -f environment.yml
 ```
 3. start gadgetron environment, then build gadgetron
@@ -93,20 +93,26 @@ Now you could see a out.h5 file in the current directory.
 
 ## Usage
 
-### Research and Development  
+### Researchers
+For who wants to install this repo directly in your conda environment, without modifying the code: 
+```bash
+pip install git+https://github.com/medlab/ugad4fun.git
+```
 
+### Developers  
+For who wants to contribute to this repo, you may need follow steps below to install ugad4fun: 
 1. clone this repository to your workspace
 ```bash
 git clone https://github.com/medlab/ugad4fun.git
 cd ugad4fun
 ```
-2. use pip to install this package
+2. use pip to install this package in editable mode:
 ```bash
-pip install . -U
+pip install -e .
 ```
 3. link the config directory to gadgetron-required location
 ```bash
-ln -s $PWD/ugad4fun/recon_config $CONDA_PREFIX/share/gadgetron/config/recon_config
+sh scripts/link_config.sh
 ```
 
 ### Deployment  

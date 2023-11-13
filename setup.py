@@ -1,12 +1,21 @@
+import os
 import os.path as op
-from setuptools import setup 
 from pathlib import Path
+from setuptools import setup 
+from setuptools.command.install import install
 
 version = None
 with open(Path(rf"ugad4fun/version.py")) as f:
     version = f.read().split('=')[1].strip().strip('\'')
 if version is None:
     raise RuntimeError('Could not determine version')
+
+class LinkCommand(install):
+    
+    def run(self):
+        install.run(self)
+        os.system('sh scripts/install_config.sh')
+
 
 setup(
     name='ugad4fun',
@@ -21,11 +30,6 @@ setup(
         'ugad4fun/recon',
         'ugad4fun/tests',
         ],
-    package_data={
-        "ugad4fun": [
-            op.join("recon_config", "*.xml"), # all the config files(xml)
-            ],  
-        },
     install_requires=[
         'numpy',
         'pynufft',
@@ -35,4 +39,7 @@ setup(
     project_urls={
         'Source': 'https://github.com/medlab/ugad4fun',
         },
+    cmdclass={
+        'install': LinkCommand,
+        }
 )
