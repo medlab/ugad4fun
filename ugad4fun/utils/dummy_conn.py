@@ -26,7 +26,7 @@ class DummyConn:
         self.dataset_path = dataset_path
         self.save_path = save_path
         self.plot_mode = False if save_path else True
-        self.acquisition = list()
+        self.filter_data = list()
         self.save_dataset = None
 
         # check dataset path
@@ -37,12 +37,39 @@ class DummyConn:
         print(f'Loading {self.dataset_path}...')
         self.dataset = ismrmrd.Dataset(self.dataset_path)
         print(f'Extracting Header info...')
-        self.header = ismrmrd.xsd.CreateFromDocument(self.dataset.read_xml_header())
+        # self.header = ismrmrd.xsd.CreateFromDocument(self.dataset.read_xml_header())
 
-    def filter(self, predicate):
-        if isinstance(predicate, type):
-            return self.filters.append(lambda o: isinstance(o, predicate))
-        self.filters.append(predicate)
+    def filter(self, predicate, **kwargs):
+        if not isinstance(predicate, type):
+            raise ValueError(rf"predicate should be type ,get {predicate}")
+        print(rf"Filtering {predicate}")
+        if predicate is ismrmrd.Acquisition:
+            print(f'{self.dataset.number_of_acquisitions()} acquisitions included')
+            acquisition = []
+            for acq_num in range(self.dataset.number_of_acquisitions()):
+                acq = self.dataset.read_acquisition(acq_num)
+                acquisition.append(acq)
+            print(f'{len(acquisition)} raw data extracted')
+            self.filter_data = iter(acquisition)
+        elif predicate is ismrmrd.Waveform:
+            print(f'{self.dataset.number_of_waveforms()} waveforms included')
+            waveform = []
+            for waveform_num in range(self.dataset.number_of_waveforms()):
+                wave = self.dataset.read_waveform(waveform_num)
+                waveform.append(wave)
+            print(f'{len(waveform)} waveform data extracted')
+            self.filter_data = iter(waveform)
+        elif predicate is ismrmrd.Image:
+            print(f'{self.dataset.number_of_images(**kwargs)} images included')
+            image = []
+            for image_num in range(self.dataset.number_of_images(**kwargs)):
+                kwargs['imnum'] = image_num
+                img = self.dataset.read_image(**kwargs)
+                image.append(img)
+            print(f'{len(image)} image data extracted')
+            self.filter_data = iter(image)
+        else:
+            print(f'{predicate} unsupported')
 
     def send(self, image):
         if self.plot_mode:
@@ -68,9 +95,9 @@ class DummyConn:
 
     def __next__(self):
         try:
-            return next(self.acquisition)
+            return next(self.filter_data)
         except StopIteration:
-            print('Iterating acquisitions finished by next')
+            print('Iterating data finished by next')
             raise StopIteration("Length too big")
 
     def __iter__(self):
@@ -78,5 +105,5 @@ class DummyConn:
             try:
                 yield next(self)
             except StopIteration:
-                print('Iterating acquisitions finished by iteration')
+                print('Iterating data finished by iteration')
                 return
