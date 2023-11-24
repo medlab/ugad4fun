@@ -37,7 +37,7 @@ class DummyConn:
         print(f'Loading {self.dataset_path}...')
         self.dataset = ismrmrd.Dataset(self.dataset_path)
         print(f'Extracting Header info...')
-        # self.header = ismrmrd.xsd.CreateFromDocument(self.dataset.read_xml_header())
+        self.header = ismrmrd.xsd.CreateFromDocument(self.dataset.read_xml_header())
 
     def filter(self, predicate, **kwargs):
         if not isinstance(predicate, type):
