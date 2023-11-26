@@ -43,7 +43,7 @@ axes[0, 1].imshow(np.angle(raw_data[:, :, 0, 0]).T, cmap='gray')
 axes[0, 1].axis('off')
 axes[0, 1].set_title('Phase')
 
-axes[1, 0].imshow(np.imag(raw_data[:, :, 0, 0]).T, cmap='gray')
+axes[1, 0].imshow(np.real(raw_data[:, :, 0, 0]).T, cmap='gray')
 axes[1, 0].axis('off')
 axes[1, 0].set_title('Real')
 
